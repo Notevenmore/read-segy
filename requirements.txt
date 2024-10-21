@@ -1,4 +1,4 @@
 segy==0.1.5
 flask==3.0.3
 flask-cors==4.0.2
-lasio=0.31
+lasio==0.31
