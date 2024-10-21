@@ -7,13 +7,8 @@ import io
 import os, re
 import json
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
 def convertsegy(file):
   try:
-      # membaca file
       file_content = file.read()
       file_io = io.BytesIO(file_content)
       with tempfile.NamedTemporaryFile(delete=False) as temp_file:
@@ -21,9 +16,8 @@ def convertsegy(file):
       binhead = read_bheader(temp_file.name)
       ns = binhead[0][7]
 
-      # membaca file format ebcdic dalam segy file
       ebcdic = read_ebcdic(temp_file.name)
-      ebcdic = textwrap.fill(str(ebcdic, 'utf-8'), 80)  # utf-8 remove b' character
+      ebcdic = textwrap.fill(str(ebcdic, 'utf-8'), 80) 
       ebcdic_split_newline = ebcdic.split('\n')
       ebcdic_dict = {}
       for row in ebcdic_split_newline:
@@ -33,17 +27,14 @@ def convertsegy(file):
               value = row_split[1].strip()
               ebcdic_dict[key] = value
       
-      # melakukan decrypt nama file
       m = hashlib.md5()
       m.update(temp_file.name.encode())
       x = m.hexdigest()
       ebcdic_dict['DECRYPT_KEY'] = x.upper()
       ebcdic_dict['DECRYPTION_TYPE'] = 'MD5'
  
-      # melihat ukuran tracing file
       ntraces = int(num_traces(temp_file.name, ns))
 
-      # Your dictionary with new values
       data = {
           'BA_LONG_NAME': ebcdic_dict.get('CLIENT', '') 
           if ebcdic_dict.get('CLIENT', '') 
@@ -76,10 +67,10 @@ def convertsegy(file):
           'ITEM_SUB_CATEGORY': '1.1. F - FIELD DATA', 
           'MEDIA_TYPE': 'EXTERNAL HARDISK',
           'FIELD_FILE_NUMBER': ebcdic_dict.get('FFID RANGE', ''),
-          'FIRST_SEIS_POINT_ID': ebcdic_dict.get('SP RANGE', '').split('-')[0], #First SP
-          'LAST_SEIS_POINT_ID': ebcdic_dict.get('SP RANGE', '').split('-')[1] if len(ebcdic_dict.get('SP RANGE', '').split(' ')) > 1 else '', #Last SP
+          'FIRST_SEIS_POINT_ID': ebcdic_dict.get('SP RANGE', '').split('-')[0],
+          'LAST_SEIS_POINT_ID': ebcdic_dict.get('SP RANGE', '').split('-')[1] if len(ebcdic_dict.get('SP RANGE', '').split(' ')) > 1 else '',
           'SEIS_POINT_LABEL': 'SP',
-          'POLARITY': 'NORMAL', # Need to be checked if not null data
+          'POLARITY': 'NORMAL',
           'BA_LONG_NAME_1': ebcdic_dict.get('CLIENT', ''),
           'BA_TYPE_1': 'BADAN USAHA',
           'DATA_STORE_NAME': '',
@@ -95,7 +86,6 @@ def convertsegy(file):
           'QC_STATUS': 'TERVERIFIKASI OLEH SKK MIGAS',
           'CHECKED_BY_BA_ID': '3578144811980003',
       }
-
       data_ebcdic = {
           'BA_LONG_NAME': ebcdic_dict.get("CLIENT", ""),
           'AREA_ID': ebcdic_dict.get('AREA', ""),
@@ -116,5 +106,4 @@ def convertsegy(file):
       }
       return json.dumps(data), json.dumps(data_ebcdic)
   except Exception as e:
-    logger.error(f"Error processing file with SegyFile: {e}")
     raise

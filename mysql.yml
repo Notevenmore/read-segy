@@ -1,6 +1,6 @@
 segy-convert:
   build:
     context: ./read-segy
-    tags: -ardimasp/metadb:segy-convert
+    tags: hafiz/metadb:segy-convert
   container_name: segy-convert
   ports: 3001:3001
